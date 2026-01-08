@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eagle's To-Do List</title>
+
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background: #f2f3f7;
+        font-family: "Segoe UI", sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    .card {
+        width: 60%;
+        max-width: 700px;
+        background: #fff;
+        padding: 35px;
+        border-radius: 18px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+
+    h1 {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+
+    .header-icon {
+        font-size: 40px;
+        margin-right: 10px;
+    }
+
+    .input-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+
+    input, select {
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 15px;
+        width: 180px;
+    }
+
+    input:focus, select:focus {
+        outline: none;
+        border-color: #7c3aed;
+    }
+
+    .btn {
+        padding: 12px 20px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 500;
+    }
+
+    .add-btn {
+        background: #5936FF;
+        color: white;
+        width: 140px;
+    }
+
+    .filters {
+        margin-top: 10px;
+    }
+
+    .filter-btn {
+        background: #e9ebf0;
+        color: #444;
+        margin: 4px;
+        padding: 10px 18px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .filter-btn.active {
+        background: #5936FF;
+        color: white;
+    }
+
+    ul {
+        padding: 0;
+        margin-top: 20px;
+    }
+
+    li {
+        list-style: none;
+        background: #fafafa;
+        padding: 12px;
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        border: 1px solid #e4e4e7;
+    }
+
+    li.completed {
+        text-decoration: line-through;
+        opacity: 0.6;
+    }
+
+    .delete-btn {
+        background: #ff4c61;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-size: 13px;
+    }
+
+    #stats {
+        margin-top: 10px;
+        color: gray;
+        font-size: 14px;
+    }
+
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+    <h1><span class="header-icon">🚀</span>Eagle's To-Do List</h1>
+
+    <div class="input-row">
+        <input type="text" id="taskInput" placeholder="What needs to be done?">
+
+        <select id="prioritySelect">
+            <option>Low Priority</option>
+            <option>Medium Priority</option>
+            <option>High Priority</option>
+        </select>
+
+        <input type="date" id="dateInput">
+    </div>
+
+    <button class="btn add-btn" onclick="addTask()">Add Task</button>
+
+    <div class="filters">
+        <button class="filter-btn active" onclick="setFilter('all')">All</button>
+        <button class="filter-btn" onclick="setFilter('active')">Active</button>
+        <button class="filter-btn" onclick="setFilter('completed')">Completed</button>
+        <button class="filter-btn" onclick="clearCompleted()">Clear Completed</button>
+    </div>
+
+    <ul id="taskList"></ul>
+
+    <div id="stats">0 tasks remaining</div>
+</div>
+
+<script>
+    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+    let filter = "all";
+
+    function saveTasks() {
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+    }
+
+    function renderTasks() {
+        const list = document.getElementById("taskList");
+        list.innerHTML = "";
+
+        const filtered = tasks.filter(task => {
+            if (filter === "active") return !task.completed;
+            if (filter === "completed") return task.completed;
+            return true;
+        });
+
+        filtered.forEach((task, index) => {
+            let li = document.createElement("li");
+            li.className = task.completed ? "completed" : "";
+
+            li.innerHTML = `
+                <span onclick="toggleTask(${index})">${task.text}</span>
+                <button class="delete-btn" onclick="deleteTask(${index})">Delete</button>
+            `;
+
+            list.appendChild(li);
+        });
+
+        document.getElementById("stats").textContent =
+            `${tasks.filter(t => !t.completed).length} tasks remaining`;
+
+        saveTasks();
+    }
+
+    function addTask() {
+        let text = document.getElementById("taskInput").value.trim();
+        if (!text) return;
+
+        tasks.push({ text, completed: false });
+
+        document.getElementById("taskInput").value = "";
+        renderTasks();
+    }
+
+    function toggleTask(i) {
+        tasks[i].completed = !tasks[i].completed;
+        renderTasks();
+    }
+
+    function deleteTask(i) {
+        tasks.splice(i, 1);
+        renderTasks();
+    }
+
+    function setFilter(type) {
+        filter = type;
+
+        document.querySelectorAll(".filter-btn").forEach(btn => btn.classList.remove("active"));
+        event.target.classList.add("active");
+
+        renderTasks();
+    }
+
+    function clearCompleted() {
+        tasks = tasks.filter(t => !t.completed);
+        renderTasks();
+    }
+
+    renderTasks();
+</script>
+
+</body>
+</html>
+
